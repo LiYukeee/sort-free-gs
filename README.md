@@ -82,6 +82,7 @@ The MipNeRF360 scenes are provided by the paper author [here](https://jonbarron.
 In our repository, the parameter settings for `train.py`, `render.py`, and `metrics.py` are identical to those of [3DGS](https://github.com/graphdeco-inria/gaussian-splatting). 
 
 We have added a new parameter `--depth_correct` to `train.py`, which controls the effect of Equation 10 in the paper. If this parameter is included, the weight calculation is performed as follows:
+
 $$
 w(d_i) = \max\left(0, 1 - \frac{d_i}{\sigma}\right) v_i,
 $$
