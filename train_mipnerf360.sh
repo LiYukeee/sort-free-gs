@@ -1,7 +1,6 @@
 #!/bin/bash
-# 加上 &>> ${OUPUT_BASE_PATH}/${scene}/run.txt 之后，python程序的输出不会显示在控制台上，而转移到output文件夹中的run.txt中
 
-OUPUT_BASE_PATH="outputs/SortFree/sigmoid(oi)"
+OUPUT_BASE_PATH="outputs/mipnerf360"
 DATA_BASE_PATH="data/mipnerf360"
 scenes=(
   "bicycle"
