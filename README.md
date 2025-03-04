@@ -16,6 +16,20 @@ Our implementation builds upon the original 3DGS by incorporating global paramet
 
 `Ours - w/o D` means not adding the `--depth_correct` parameter during training.
 
+We have added a new parameter `--depth_correct` to `train.py`, which controls the effect of Equation 10 in the paper. If this parameter is included, the weight calculation is performed as follows:
+
+$$
+w(d_i) = \max\left(0, 1 - \frac{d_i}{\sigma}\right) v_i
+$$
+
+which is consistent with the original paper. If the parameter is not included, the weight calculation change to:
+
+$$
+w(d_i) = v_i
+$$
+
+This modification allows us to experiment with the impact of depth correction on the rendering process and compare the results with the original model.
+
 ## Install
 
 We tested on a server configured with Ubuntu 22.04, CUDA 11.8. 
@@ -69,20 +83,6 @@ The MipNeRF360 scenes are provided by the paper author [here](https://jonbarron.
 ## Training
 
 In our repository, the parameter settings for `train.py`, `render.py`, and `metrics.py` are identical to those of [3DGS](https://github.com/graphdeco-inria/gaussian-splatting). 
-
-We have added a new parameter `--depth_correct` to `train.py`, which controls the effect of Equation 10 in the paper. If this parameter is included, the weight calculation is performed as follows:
-
-$$
-w(d_i) = \max\left(0, 1 - \frac{d_i}{\sigma}\right) v_i,
-$$
-
-which is consistent with the original paper. If the parameter is not included, the weight calculation change to:
-
-$$
-w(d_i) = v_i,
-$$
-
-This modification allows us to experiment with the impact of depth correction on the rendering process and compare the results with the original model.
 
 ### MipNeRF360
 
