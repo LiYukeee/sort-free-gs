@@ -14,6 +14,23 @@ Our implementation builds upon the original 3DGS by incorporating global paramet
 | Ours       | 23.89   | 33.20  | 29.96   | 20.62   | 27.07  | 31.51   | 32.35 | 24.79 | 21.49    | 27.21 |
 | Ours-w/o D | 23.89   | 33.05  | 29.83   | 20.78   | 27.14  | 31.21   | 31.65 | 24.90 | 21.61    | 27.12 |
 
+### SSIM
+
+|            | bicycle | bonsai | counter | flowers | garden | kitchen | room  | stump | treehill | AVG   |
+| ---------- | ------- | ------ | ------- | ------- | ------ | ------- | ----- | ----- | -------- | ----- |
+| Paper      | 0.744   | 0.938  | 0.909   | 0.580   | 0.872  | 0.923   | 0.925 | 0.728 | 0.614    | 0.804 |
+| Ours       | 0.714   | 0.951  | 0.919   | 0.581   | 0.850  | 0.931   | 0.930 | 0.708 | 0.620    | 0.800 |
+| Ours-w/o D | 0.714   | 0.948  | 0.918   |	0.582 	| 0.851  |0.931    | 0.929 |0.713  | 0.622    | 0.801 |
+
+### LPIPS
+
+|            | bicycle | bonsai | counter | flowers | garden | kitchen | room  | stump | treehill | AVG   |
+| ---------- | ------- | ------ | ------- | ------- | ------ | ------- | ----- | ----- | -------- | ----- |
+| Paper      | 0.205   | 0.199  | 0.191   | 0.342   | 0.097  | 0.125   | 0.197 | 0.235 | 0.311    | 0.211 |
+| Ours       | 0.265   | 0.144  | 0.176   | 0.329   | 0.128  | 0.117   | 0.190 | 0.275 | 0.347    | 0.219 |
+| Ours-w/o D | 0.265   | 0.175  | 0.176   | 0.329   | 0.128  | 0.117   | 0.190 | 0.272 | 0.344    | 0.222 |
+
+
 `Ours - w/o D` means not adding the `--depth_correct` parameter during training.
 
 We have added a new parameter `--depth_correct` to `train.py`, which controls the effect of Equation 10 in the paper. If this parameter is included, the weight calculation is performed as follows:
