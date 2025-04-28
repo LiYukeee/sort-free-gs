@@ -54,7 +54,7 @@ We tested on a server configured with Ubuntu 22.04, CUDA 11.8.
 1. Clone this repo:
 
 ```
-git clone --recursive https://github.com/LiYukeee/sort-free-gs.git 
+git clone --recursive https://github.com/LiYukeee/sort-free-gs.git --recursive
 cd sort-free-gs
 ```
 
