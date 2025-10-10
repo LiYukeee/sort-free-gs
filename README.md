@@ -1,6 +1,10 @@
-# Unofficial Implementation of Sort-Free Gaussian Splatting
+# Sort-free Gaussian Splatting via Weighted Sum Rendering
 
-This is an unofficial implementation of the ICLR'25 paper "Sort-free Gaussian Splatting via Weighted Sum Rendering". [Paper](https://arxiv.org/pdf/2410.18931)
+
+
+This repository is a re-implementation of the ICLR'25 paper "Sort-free Gaussian Splatting via Weighted Sum Rendering". [Paper](https://arxiv.org/pdf/2410.18931).
+
+We are honored that this re-implementation has been recognized and linked by the original author, [Qiqi Hou](https://hqqxyy.github.io/).
 
 Our implementation builds upon the original 3DGS by incorporating global parameters `sigma` and `weight_background`, as well as a set of `sh` parameters for each GS to decode the view-dependent effects `Vi`.
 
