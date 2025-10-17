@@ -8,7 +8,8 @@
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
-
+from utils.system_utils import autoChooseCudaDevice
+autoChooseCudaDevice()
 import torch
 from scene import Scene
 import os
@@ -22,35 +23,41 @@ from argparse import ArgumentParser
 from arguments import ModelParams, PipelineParams, get_combined_args
 from gaussian_renderer import GaussianModel
 import time
-try:
-    import subprocess
-    import numpy as np
-    cmd = 'nvidia-smi -q -d Memory |grep -A4 GPU|grep Used'
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE).stdout.decode().split('\n')
-    os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmin([int(x.split()[2]) for x in result[:-1]]))
-    os.system('echo $CUDA_VISIBLE_DEVICES')
-except:
-    pass
+import numpy as np
+
 
 def render_set_for_FPS_test(args, model_path, name, iteration, views, gaussians, pipeline, background):
     """
-    Test FPS
+    input: Keep the same input parameters as render_set(...)
+    output: the output is a more accurate FPS.
     """
-    t_list = np.array([1.0] * 1000)
-    steps = 0
+    t_list_len = 200
+    warmup_times = 5
+    test_times = 10
+    t_list = np.array([1.0] * t_list_len)
+    step = 0
+    fps_list = []
     while True:
         for view in views:
-            torch.cuda.synchronize(); t0 = time.time()
-            rendering = render(view, gaussians, pipeline, background)
-            torch.cuda.synchronize(); t1 = time.time()
-            # temp = loadInt("num_contribute_gs")
-            # print("contribute gs: ", temp.sum())
-            
-            t_list[steps % 1000] = t1 - t0
-            steps += 1
-            if steps % 100 == 0:
+            step += 1
+            torch.cuda.synchronize();
+            t0 = time.time()
+            rendering = render(view, gaussians, pipeline, background)["render"]
+            torch.cuda.synchronize();
+            t1 = time.time()
+            t_list[step % t_list_len] = t1 - t0
+
+            if step % t_list_len == 0 and step > t_list_len * warmup_times:
                 fps = 1.0 / t_list.mean()
                 print(f'Test FPS: \033[1;35m{fps:.5f}\033[0m')
+                fps_list.append(fps)
+            if step > t_list_len * (test_times + warmup_times):
+                # write fps info to a txt file
+                with open(os.path.join(model_path, "point_cloud", "iteration_{}".format(iteration), "FPS.txt"), 'w') as f:
+                    f.write("Average FPS: {:.5f}\n".format(np.mean(fps_list)))
+                    f.write("FPS std: {:.5f}\n".format(np.std(fps_list)))
+                print("Average FPS: {:.5f}, FPS std: {:.5f}".format(np.mean(fps_list), np.std(fps_list)))
+                return
                 
 def render_set(args, model_path, name, iteration, views, gaussians, pipeline, background):
     render_path = os.path.join(model_path, name, "ours_{}".format(iteration), "renders")
@@ -88,6 +95,8 @@ def render_sets(args, dataset : ModelParams, iteration : int, pipeline : Pipelin
 
         if not skip_test:
              render_set(args, dataset.model_path, "test", scene.loaded_iter, scene.getTestCameras(), gaussians, pipeline, background)
+        
+        render_set_for_FPS_test(args, dataset.model_path, "test", scene.loaded_iter, scene.getTestCameras(), gaussians, pipeline, background)
 
 if __name__ == "__main__":
     # Set up command line argument parser

@@ -13,10 +13,11 @@ import torch
 from torch import nn
 import numpy as np
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix
+from utils.general_utils import PILtoTorch
 
 class Camera(nn.Module):
     def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask,
-                 image_name, uid,
+                 image_name, resolution_scale, uid,
                  trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda"
                  ):
         super(Camera, self).__init__()
@@ -28,23 +29,39 @@ class Camera(nn.Module):
         self.FoVx = FoVx
         self.FoVy = FoVy
         self.image_name = image_name
+        self.resolution_scale = resolution_scale
+        self.gt_alpha_mask = gt_alpha_mask
 
-        try:
-            self.data_device = torch.device(data_device)
-        except Exception as e:
-            print(e)
-            print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device" )
-            self.data_device = torch.device("cuda")
-
-        self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
-        self.image_width = self.original_image.shape[2]
-        self.image_height = self.original_image.shape[1]
-
-        if gt_alpha_mask is not None:
-            self.original_image *= gt_alpha_mask.to(self.data_device)
+        if data_device != 'disk':
+            try:
+                self.data_device = torch.device(data_device)
+            except Exception as e:
+                print(e)
+                print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device" )
+                self.data_device = torch.device("cuda")
         else:
-            self.original_image *= torch.ones((1, self.image_height, self.image_width), device=self.data_device)
-
+            self.data_device = "disk"
+            
+        self.image_width = image.size[0]
+        self.image_height = image.size[1]
+        
+        if data_device != "disk":
+            
+            resized_image_rgb = PILtoTorch(image, image.size)
+            gt_image = resized_image_rgb[:3, ...]
+            loaded_mask = None
+            if resized_image_rgb.shape[0] == 4:
+                loaded_mask = resized_image_rgb[3:4, ...]
+            self.gt_alpha_mask = loaded_mask
+            self.gt_image = gt_image.clamp(0.0, 1.0).to(self.data_device)
+            if gt_alpha_mask is not None:
+                self.gt_image *= gt_alpha_mask.to(self.data_device)
+            else:
+                self.gt_image *= torch.ones((1, self.image_height, self.image_width), device=self.data_device)
+        else:
+            self.image = image
+            
+            
         self.zfar = 100.0
         self.znear = 0.01
 
@@ -55,6 +72,15 @@ class Camera(nn.Module):
         self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1).cuda()
         self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
+    
+    @property
+    def original_image(self):
+        if self.data_device == "disk":
+            image = self.image
+            # image_path = image.filename
+            return PILtoTorch(image, image.size)[:3, ...]
+        else:
+            return self.gt_image            
 
 class MiniCam:
     def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform):

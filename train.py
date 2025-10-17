@@ -8,7 +8,8 @@
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
-
+from utils.system_utils import autoChooseCudaDevice
+autoChooseCudaDevice()
 import os
 import torch
 from random import randint
@@ -28,15 +29,6 @@ try:
 except ImportError:
     TENSORBOARD_FOUND = False
 
-try:
-    import subprocess
-    import numpy as np
-    cmd = 'nvidia-smi -q -d Memory |grep -A4 GPU|grep Used'
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE).stdout.decode().split('\n')
-    os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmin([int(x.split()[2]) for x in result[:-1]]))
-    os.system('echo $CUDA_VISIBLE_DEVICES')
-except:
-    pass
 
 def get_logger(path):
     import logging

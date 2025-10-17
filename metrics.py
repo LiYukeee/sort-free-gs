@@ -8,7 +8,8 @@
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
-
+from utils.system_utils import autoChooseCudaDevice
+autoChooseCudaDevice()
 from pathlib import Path
 import os
 from PIL import Image
@@ -21,15 +22,6 @@ from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser
 
-try:
-    import subprocess
-    import numpy as np
-    cmd = 'nvidia-smi -q -d Memory |grep -A4 GPU|grep Used'
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE).stdout.decode().split('\n')
-    os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmin([int(x.split()[2]) for x in result[:-1]]))
-    os.system('echo $CUDA_VISIBLE_DEVICES')
-except:
-    pass
 
 def readImages(renders_dir, gt_dir):
     renders = []
@@ -38,8 +30,8 @@ def readImages(renders_dir, gt_dir):
     for fname in os.listdir(renders_dir):
         render = Image.open(renders_dir / fname)
         gt = Image.open(gt_dir / fname)
-        renders.append(tf.to_tensor(render).unsqueeze(0)[:, :3, :, :].cuda())
-        gts.append(tf.to_tensor(gt).unsqueeze(0)[:, :3, :, :].cuda())
+        renders.append(tf.to_tensor(render).unsqueeze(0)[:, :3, :, :])
+        gts.append(tf.to_tensor(gt).unsqueeze(0)[:, :3, :, :])
         image_names.append(fname)
     return renders, gts, image_names
 
@@ -79,9 +71,9 @@ def evaluate(model_paths):
                 lpipss = []
 
                 for idx in tqdm(range(len(renders)), desc="Metric evaluation progress"):
-                    ssims.append(ssim(renders[idx], gts[idx]))
-                    psnrs.append(psnr(renders[idx], gts[idx]))
-                    lpipss.append(lpips(renders[idx], gts[idx], net_type='vgg'))
+                    ssims.append(ssim(renders[idx].cuda(), gts[idx].cuda()))
+                    psnrs.append(psnr(renders[idx].cuda(), gts[idx].cuda()))
+                    lpipss.append(lpips(renders[idx].cuda(), gts[idx].cuda(), net_type='vgg'))
 
                 print("  SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
                 print("  PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
