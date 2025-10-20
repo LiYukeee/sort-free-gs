@@ -71,7 +71,7 @@ def render_set(args, model_path, name, iteration, views, gaussians, pipeline, ba
 
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         rendering = render(view, gaussians, pipeline, background)["render"]
-        gt = view.original_image[0:3, :, :]
+        gt = view.original_image[0:3, :, :].cuda()
         # error_map = torch.mean(torch.abs(rendering - gt), dim=0)
         error_map = torch.abs(rendering - gt)
         if args.store_image:

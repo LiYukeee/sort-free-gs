@@ -146,13 +146,6 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             if iteration < opt.iterations:
                 gaussians.optimizer.step()
                 gaussians.optimizer.zero_grad(set_to_none = True)
-                # # print parameter name and learning rate
-                # print(
-                #     gaussians.optimizer.param_groups[0]['name'], gaussians.optimizer.param_groups[0]['lr'], 
-                #     gaussians.optimizer.param_groups[-2]['name'], gaussians.optimizer.param_groups[-2]['lr'],
-                #     gaussians.optimizer.param_groups[4]['name'], gaussians.optimizer.param_groups[4]['lr'],
-                #     gaussians.optimizer.param_groups[5]['name'], gaussians.optimizer.param_groups[5]['lr'],
-                #     )
                 
 
             if (iteration in checkpoint_iterations):
@@ -192,7 +185,7 @@ def training_report(args, tb_writer, iteration, Ll1, loss, l1_loss, elapsed, tes
     if iteration in testing_iterations:
         torch.cuda.empty_cache()
         validation_configs = ({'name': 'test', 'cameras' : scene.getTestCameras()}, 
-                              {'name': 'train', 'cameras' : scene.getTrainCameras()})
+                              {'name': 'train', 'cameras' : [scene.getTrainCameras()[idx % len(scene.getTrainCameras())] for idx in range(5, 30, 5)]})
 
         for config in validation_configs:
             if config['cameras'] and len(config['cameras']) > 0:
@@ -229,14 +222,24 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=0)
     parser.add_argument('--debug_from', type=int, default=-1)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[5000, 10000, 15000, 20000, 25000, 30000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[30000])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[-1])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[-1])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
     # for Test
     args = parser.parse_args(sys.argv[1:])
-    args.save_iterations.append(args.iterations)
+    if args.test_iterations[0] == -1:
+        args.test_iterations = [i for i in range(5000, args.iterations + 1, 5000)]
+    if len(args.test_iterations) == 0 or args.test_iterations[-1] != args.iterations:
+        args.test_iterations.append(args.iterations)
+    print(args.test_iterations)
+
+    if args.save_iterations[0] == -1:
+        args.save_iterations = [i for i in range(10000, args.iterations + 1, 10000)]
+    if len(args.save_iterations) == 0 or args.save_iterations[-1] != args.iterations:
+        args.save_iterations.append(args.iterations)
+    print(args.save_iterations)
     
     print("Optimizing " + args.model_path)
     print("depth_correct:", args.depth_correct)
