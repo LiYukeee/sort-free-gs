@@ -16,7 +16,10 @@ from PIL import Image
 import torch
 import torchvision.transforms.functional as tf
 from utils.loss_utils import ssim
-from lpipsPyTorch import lpips
+# from lpipsPyTorch import lpips
+import lpips
+lpips_fn = lpips.LPIPS(net='vgg').to('cuda')
+
 import json
 from tqdm import tqdm
 from utils.image_utils import psnr
@@ -71,11 +74,11 @@ def evaluate(model_paths):
                 lpipss = []
 
                 for idx in tqdm(range(len(renders)), desc="Metric evaluation progress"):
-                    renders[idx] = renders[idx].to(device)
-                    gts[idx] = gts[idx].to(device)
+                    renders[idx] = renders[idx].to('cuda')
+                    gts[idx] = gts[idx].to('cuda')
                     ssims.append(ssim(renders[idx].cuda(), gts[idx].cuda()))
                     psnrs.append(psnr(renders[idx].cuda(), gts[idx].cuda()))
-                    lpipss.append(lpips(renders[idx].cuda(), gts[idx].cuda(), net_type='vgg'))
+                    lpipss.append(lpips_fn(renders[idx], gts[idx]).detach())
                     renders[idx] = renders[idx].to('cpu')
                     gts[idx] = gts[idx].to('cpu')
 
