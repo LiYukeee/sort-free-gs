@@ -18,7 +18,7 @@ from utils.general_utils import PILtoTorch
 class Camera(nn.Module):
     def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask,
                  image_name, resolution_scale, uid,
-                 trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda"
+                 trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda", resolution=None
                  ):
         super(Camera, self).__init__()
 
@@ -42,12 +42,12 @@ class Camera(nn.Module):
         else:
             self.data_device = "disk"
             
-        self.image_width = image.size[0]
-        self.image_height = image.size[1]
+        self.image_width = resolution[0]
+        self.image_height = resolution[1]
         
         if data_device != "disk":
             
-            resized_image_rgb = PILtoTorch(image, image.size)
+            resized_image_rgb = PILtoTorch(image, resolution)
             gt_image = resized_image_rgb[:3, ...]
             loaded_mask = None
             if resized_image_rgb.shape[0] == 4:

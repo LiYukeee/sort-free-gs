@@ -42,7 +42,7 @@ def loadCam(args, id, cam_info, resolution_scale):
                   FoVx=cam_info.FovX, FoVy=cam_info.FovY, 
                   image=cam_info.image, gt_alpha_mask=None,
                   image_name=cam_info.image_name, resolution_scale=resolution_scale, 
-                  uid=id, data_device=args.data_device)
+                  uid=id, data_device=args.data_device, resolution=resolution)
 
 def cameraList_from_camInfos(cam_infos, resolution_scale, args):
     camera_list = []
